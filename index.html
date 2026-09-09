@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<style>
+    body {
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: pink;
+    }
+    .aa {
+        width: 200px;
+        height: 200px;
+        border-radius: 50%;
+        background: #35d4ec;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 35px;
+    }
+</style>
+<script src="./04-子串//239.滑动窗口最大值.js"></script>
+<script>
+    function dianji() {
+        const res = maxSlidingWindow([1, 3, -1, -3, 5, 3, 6, 7], 3)
+        console.log('aa', res)
+    }
+</script>
+<body>
+    <div onclick="dianji()" class="aa">点击</div>
+</body>
+</html>

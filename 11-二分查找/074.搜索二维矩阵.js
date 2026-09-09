@@ -1,0 +1,51 @@
+/**
+ * LeetCode 热题 100 —— 二分查找
+ *
+ * 74. 搜索二维矩阵 (Search a 2D Matrix)
+ * 难度: 中等 | 标签: 数组、二分查找、矩阵
+ * 链接: https://leetcode.cn/problems/search-a-2d-matrix/
+ *
+ * ───────────────────────────────────────────
+ * 题目描述:
+ *
+ * 给你一个满足下述两条属性的 `m x n` 整数矩阵：
+ *   - 每行中的整数从左到右按非严格递增顺序排列。
+ *   - 每行的第一个整数大于前一行的最后一个整数。
+ *
+ * 给你一个整数 `target` ，如果 `target` 在矩阵中，返回 `true` ；否则，返回 `false` 。
+ *
+ * 你必须编写一个时间复杂度为 `O(log(m * n))` 的解决方案。
+ *
+ * 示例 1：
+ *
+ * [图片]
+ *
+ *   输入：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 3
+ *   输出：true
+ *
+ * 示例 2：
+ *
+ * [图片]
+ *
+ *   输入：matrix = [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target = 13
+ *   输出：false
+ *
+ * 提示：
+ *   - `m == matrix.length`
+ *   - `n == matrix[i].length`
+ *   - `1 <= m, n <= 100`
+ *   - `-10^4 <= matrix[i][j], target <= 10^4`
+ */
+
+/**
+ * searchMatrix
+ * @param {number[][]} matrix
+ * @param {number} target
+ * @return {boolean}
+ */
+const searchMatrix = function (matrix, target) {
+  // TODO: 在这里实现你的解法
+};
+
+// ─── 测试 ───────────────────────────────────────────
+// console.log(searchMatrix([[1, 3, 5, 7], [10, 11, 16, 20], [23, 30, 34, 60]], 3)); // 期望: true
