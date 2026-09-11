@@ -74,12 +74,50 @@ const toArray = (head) => {
 };
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: 快慢指针（Floyd 判圈算法，俗称"龟兔赛跑"）
+ *
+ * slow 每次走 1 步，fast 每次走 2 步:
+ *   - 有环: fast 必然追上 slow（每步追近 1 格，不会跳过），
+ *           像操场跑圈终会被套圈 → slow === fast 时返回 true
+ *   - 无环: fast 先走到 null（循环条件 fast !== null && fast.next !== null
+ *           保证 fast.next.next 不会对 null 取值报错）→ 返回 false
+ *
+ * 例: 3→2→0→-4 尾接 2
+ *   初始: slow=3, fast=3
+ *   1步:  slow=2, fast=0
+ *   2步:  slow=0, fast=2   （0→-4→2）
+ *   3步:  slow=-4, fast=-4 → 相遇 → true ✓
+ *
+ * 另一个解法: 哈希 Set 记录访问过的节点，遇到重复就返回 true，
+ *   时间 O(n) 但空间 O(n)；快慢指针空间 O(1)，满足进阶要求
+ *
+ * 复杂度: 时间 O(n)，空间 O(1)
+ */
+
+/**
  * hasCycle
+ * 输入: head = [3,2,0,-4]（尾节点接第 2 个节点）
  * @param {ListNode} head
  * @return {boolean}
  */
 const hasCycle = function (head) {
-  // TODO: 在这里实现你的解法
+  let slow = head; // 慢指针，一次走 1 步
+  let fast = head; // 快指针，一次走 2 步
+
+  debugger
+
+  // fast 为 null 或 fast.next 为 null 说明无环（走到了链尾）
+  while (fast !== null && fast.next !== null) {
+    slow = slow.next;
+    fast = fast.next.next;
+
+    if (slow === fast) {
+      return true; // 套圈了 → 有环
+    }
+  }
+
+  return false; // fast 走到链尾 → 无环
 };
 
 // ─── 测试 ───────────────────────────────────────────

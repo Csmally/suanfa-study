@@ -35,12 +35,52 @@
  */
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: 排序 + 一次遍历
+ *
+ * 1. 按区间起点排序（intervals.sort），
+ *    排序后所有可能重叠的区间都会挨在一起，
+ *    合并问题退化成"相邻区间两两比较"
+ * 2. 遍历每个区间，和结果数组 merged 的最后一个区间比较:
+ *    - 当前起点 <= 上一个终点 → 重叠 → 合并：
+ *      终点取两者较大值（用 max 是因为可能完全包含，如 [1,10] 包住 [2,3]）
+ *    - 否则不重叠 → 直接把当前区间加入结果
+ * 3. 起点已排好序，所以 merged 里上一个区间的起点一定 <= 当前起点，
+ *    只需更新终点，不用动起点
+ *
+ * 关键点: 用 <= 判断重叠——边界接触（如 [1,4] 和 [4,5]）也算重叠；
+ *        排序是关键预处理，未排序时重叠区间可能天各一方，无法一次遍历
+ *
+ * 复杂度: 时间 O(n log n)（排序主导），空间 O(n)（结果数组）
+ */
+
+/**
  * merge
+ * 输入: intervals = [[1,3],[2,6],[8,10],[15,18]]
  * @param {number[][]} intervals
  * @return {number[][]}
  */
 const merge = function (intervals) {
-  // TODO: 在这里实现你的解法
+  // 1. 按起点排序（会修改原数组，LeetCode 上允许）
+  intervals.sort((a, b) => a[0] - b[0]);
+
+  const merged = []; // 合并后的结果，最后一个元素是"当前正在合并的区间"
+
+  debugger
+
+  for (const interval of intervals) {
+    const lastMerged = merged[merged.length - 1];
+
+    if (merged.length > 0 && interval[0] <= lastMerged[1]) {
+      // 2a. 重叠：终点取两者较大值（处理完全包含的情况）
+      lastMerged[1] = Math.max(lastMerged[1], interval[1]);
+    } else {
+      // 2b. 不重叠：把当前区间加入结果（拷贝一份，避免后续合并时改动原输入）
+      merged.push([interval[0], interval[1]]);
+    }
+  }
+
+  return merged;
 };
 
 // ─── 测试 ───────────────────────────────────────────

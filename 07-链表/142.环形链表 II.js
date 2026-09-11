@@ -74,12 +74,62 @@ const toArray = (head) => {
 };
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: 快慢指针两阶段（Floyd 判圈算法的升级版）
+ *
+ * 第一阶段（同 141）: 快慢指针在环内相遇
+ * 第二阶段: 一个指针回到链表头，另一个留在相遇点，
+ *          两个指针同速（都走 1 步）前进 → 相遇点就是环入口
+ *
+ * 为什么成立（设 头到入口距离 a、入口到相遇点距离 b、相遇点绕回入口距离 c）:
+ *   相遇时 slow 走了 a + b
+ *   fast 走了 a + b + (b + c)（比 slow 多绕了整整一圈）
+ *   fast 速度是 slow 两倍 → 2(a + b) = a + 2b + c → 解得 a = c
+ *   "头到入口"的距离 恰好等于 "相遇点绕回入口"的距离，
+ *   所以两个同速指针分别从头和相遇点出发，必然同时到达入口
+ *
+ * 例: 3→2→0→-4 尾接 2（入口是 2）
+ *   相遇点: -4（第一阶段走 3 轮）
+ *   第二阶段: 指针1 从 3 出发、指针2 从 -4 出发
+ *   指针1: 3 → 2        指针2: -4 → 2
+ *   在节点 2 相遇 → 返回 2 ✓（a = 1 = c，都只走 1 步）
+ *
+ * 另一个解法: Set 存访问过的节点，第一个重复的节点就是入口，
+ *   简单但 O(n) 空间；本解法 O(1) 空间，且不修改链表（题目要求）
+ *
+ * 复杂度: 时间 O(n)，空间 O(1)
+ */
+
+/**
  * detectCycle
+ * 输入: head = [3,2,0,-4]（尾节点接第 2 个节点）
  * @param {ListNode} head
  * @return {ListNode|null}
  */
 const detectCycle = function (head) {
-  // TODO: 在这里实现你的解法
+  let slow = head;
+  let fast = head;
+
+  debugger
+
+  // 第一阶段: 快慢指针找相遇点（无环则 fast 先到 null）
+  while (fast !== null && fast.next !== null) {
+    slow = slow.next;
+    fast = fast.next.next;
+
+    if (slow === fast) {
+      // 第二阶段: 一个指针回到头，两个指针同速走，相遇点 = 环入口
+      let pointerFromHead = head;
+      let pointerFromMeet = slow;
+      while (pointerFromHead !== pointerFromMeet) {
+        pointerFromHead = pointerFromHead.next;
+        pointerFromMeet = pointerFromMeet.next;
+      }
+      return pointerFromHead; // 环入口节点
+    }
+  }
+
+  return null; // 无环
 };
 
 // ─── 测试 ───────────────────────────────────────────

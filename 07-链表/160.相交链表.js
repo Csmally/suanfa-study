@@ -108,8 +108,67 @@ const toArray = (head) => {
  */
 const getIntersectionNode = function (headA, headB) {
   // TODO: 在这里实现你的解法
+  let curNodeA = headA;
+  while (curNodeA) {
+    let curNodeB = headB;
+    while (curNodeB) {
+      if (curNodeA === curNodeB) {
+        return curNodeA;
+      } else {
+        curNodeB = curNodeB.next;
+      }
+    }
+    curNodeA = curNodeA.next;
+  }
+  return null
 };
 
+/**
+ * ───────────────────────────────────────────
+ * 解题思路: 双指针（"你走完我的路，我走完你的路"）—— O(m+n) 进阶解
+ *
+ * 设 A 独有段长度 a、B 独有段长度 b、公共段长度 c
+ *   - pointerA 从 A 出发，走完 A 后接到 B 的头上继续走
+ *   - pointerB 从 B 出发，走完 B 后接到 A 的头上继续走
+ * 有交点时:
+ *   pointerA 走 a + c + b 步，pointerB 走 b + c + a 步，
+ *   总路程相等 → 两指针同时到达交点 → 循环在 pointerA === pointerB 时退出
+ * 无交点时:
+ *   两指针都走 a + b 步 → 同时走到 null → 返回 null
+ *
+ * 关键点: 比较的是节点引用（===）而不是节点的值（.val），
+ *        题目特意强调"值相同的两个节点可能不是同一个节点"
+ *        （暴力双循环枚举也能做，但 O(m*n) 会超时；哈希 Set 也可以，O(m+n) 但要 O(m) 空间）
+ *
+ * 复杂度: 时间 O(m+n)，空间 O(1)
+ */
+
+/**
+ * getIntersectionNodeTwoPointers
+ * @param {ListNode} headA
+ * @param {ListNode} headB
+ * @return {ListNode|null}
+ */
+const getIntersectionNodeTwoPointers = function (headA, headB) {
+  let pointerA = headA;
+  let pointerB = headB;
+
+
+  // 两指针各自走完自己的链表后，接到对方链表头上继续走，
+  // 总路程相同 → 要么在交点相遇，要么同时走到 null
+  while (pointerA !== pointerB) {
+    pointerA = pointerA === null ? headB : pointerA.next;
+    pointerB = pointerB === null ? headA : pointerB.next;
+  }
+
+  return pointerA; // 交点节点 或 null（不相交）
+};
+
+// 链表 A：  A1 → A2 → C1 → C2
+// 链表 B：  B1 → B2 → B3 → C1 → C2
+
+// 链表 A：  A1 → A2 → C1 → C2 → B1 → B2 → B3 → C1 → C2
+// 链表 B：  B1 → B2 → B3 → C1 → C2 → A1 → A2 → C1 → C2
 // ─── 测试 ───────────────────────────────────────────
 // const common = toList([8, 4, 5]);
 // const a = toList([4, 1]);

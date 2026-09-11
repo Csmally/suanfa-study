@@ -37,13 +37,59 @@
  */
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: 右上角出发的 Z 字形查找（每步排除一行或一列）
+ *
+ * 矩阵性质: 每行从左到右升序、每列从上到下升序
+ *
+ * 右上角是特殊位置: 它是"本行的最大值"+"本列的最小值"
+ *   - 当前值 > target → 本列往下只会更大，整列排除 → 左移一列
+ *   - 当前值 < target → 本行往左只会更小，整行排除 → 下移一行
+ *   - 相等 → 找到
+ * 每一步都能确定性地排除一整行或一整列，最多走 m+n 步
+ *
+ * 例: target = 5
+ *   从右上角 15 出发: 15>5 左移 → 11>5 左移 → 7>5 左移 → 4<5 下移 → 5 ✓
+ *   （走位: 15 → 11 → 7 → 4 → 5，像个 Z 字形）
+ *
+ * 关键点: 从左上角出发不行——两个方向（右、下）都比当前值大，
+ *         无法判断该往哪走；右上角"一行大一行小"才能二选一
+ *         （左下角出发同理可行，方向对称）
+ *
+ * 复杂度: 时间 O(m+n)，空间 O(1)
+ */
+
+/**
  * searchMatrix
+ * 输入: matrix = [[1,4,7,11,15],...], target = 5
  * @param {number[][]} matrix
  * @param {number} target
  * @return {boolean}
  */
 const searchMatrix = function (matrix, target) {
-  // TODO: 在这里实现你的解法
+  const rows = matrix.length;
+  const cols = matrix[0].length;
+
+  // 从右上角出发
+  let row = 0;
+  let col = cols - 1;
+
+  debugger
+
+  while (row < rows && col >= 0) {
+    const current = matrix[row][col];
+
+    if (current === target) {
+      return true;
+    } else if (current > target) {
+      col--; // 当前值太大 → 本列下方只会更大，整列排除，左移
+    } else {
+      row++; // 当前值太小 → 本行左边只会更小，整行排除，下移
+    }
+  }
+
+  // 走出矩阵边界 → 没找到
+  return false;
 };
 
 // ─── 测试 ───────────────────────────────────────────

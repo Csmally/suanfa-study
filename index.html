@@ -24,11 +24,35 @@
         font-size: 35px;
     }
 </style>
-<script src="./04-子串//239.滑动窗口最大值.js"></script>
+<script src="./07-链表/146.LRU 缓存.js"></script>
 <script>
     function dianji() {
-        const res = maxSlidingWindow([1, 3, -1, -3, 5, 3, 6, 7], 3)
-        console.log('aa', res)
+        // LeetCode 示例: capacity = 2
+        const lru = new LRUCache(2)
+        lru.put(1, 1)
+        lru.put(2, 2)
+        const r1 = lru.get(1)      // 1，同时 1 变最新
+        lru.put(3, 3)              // 淘汰最旧的 key 2
+        const r2 = lru.get(2)      // -1
+        lru.put(4, 4)              // 淘汰最旧的 key 1
+        const r3 = lru.get(1)      // -1
+        const r4 = lru.get(3)      // 3
+        const r5 = lru.get(4)      // 4
+        console.log('LRU 示例', [r1, r2, r3, r4, r5], '期望 [1, -1, -1, 3, 4]')
+
+        // 边界: capacity = 1
+        const one = new LRUCache(1)
+        one.put(1, 1)
+        one.put(2, 2)              // 淘汰 1
+        console.log('capacity=1', one.get(1), one.get(2), '期望 -1 2')
+
+        // 更新已存在的 key，值要变，顺序也要提前
+        const upd = new LRUCache(2)
+        upd.put(1, 1)
+        upd.put(2, 2)
+        upd.put(1, 10)             // 1 变最新，2 变成最旧
+        upd.put(3, 3)              // 淘汰 2
+        console.log('更新已有 key', upd.get(1), upd.get(2), upd.get(3), '期望 10 -1 3')
     }
 </script>
 <body>

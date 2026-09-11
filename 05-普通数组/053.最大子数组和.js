@@ -36,12 +36,47 @@
  */
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: 动态规划（Kadane 算法）
+ *
+ * 定义 dp[i] = 以第 i 个元素结尾的子数组的最大和
+ * 走到每个位置只有两种选择:
+ *   1. 接上前面的队伍: dp[i-1] + nums[i]（前面的和是正数，越接越大）
+ *   2. 自己另起炉灶:   nums[i]      （前面的和是负数，接了只会拖累自己）
+ * 所以递推公式: dp[i] = max(dp[i-1] + nums[i], nums[i])
+ * 最终答案 = 所有 dp[i] 中的最大值（最优子数组可能在任意位置结尾）
+ *
+ * 空间优化: dp[i] 只依赖 dp[i-1]，不需要整个数组，
+ *          用 currentSum 滚动记录上一个状态即可，空间 O(1)
+ *
+ * 关键点: 这道题不能用滑动窗口——数组里有负数，前缀和不单调，
+ *        窗口变大和不一定变大；也不用 Map 查历史，
+ *        而是"每个位置做个二选一"就能推出最优解
+ *
+ * 复杂度: 时间 O(n)（每个元素只看一次），空间 O(1)
+ */
+
+/**
  * maxSubArray
+ * 输入: nums = [-2,1,-3,4,-1,2,1,-5,4]
  * @param {number[]} nums
  * @return {number}
  */
 const maxSubArray = function (nums) {
-  // TODO: 在这里实现你的解法
+  let currentSum = 0; // dp 滚动变量: 以当前位置结尾的子数组的最大和
+  let maxSum = -Infinity; // 全局最大子数组和
+
+  debugger
+
+  for (const num of nums) {
+    // 二选一: 接上前面的队伍 vs 自己另起炉灶
+    currentSum = Math.max(currentSum + num, num);
+
+    // 用"以当前位置结尾"的最大和去更新全局答案
+    maxSum = Math.max(maxSum, currentSum);
+  }
+
+  return maxSum;
 };
 
 // ─── 测试 ───────────────────────────────────────────
