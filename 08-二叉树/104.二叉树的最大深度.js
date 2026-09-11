@@ -63,8 +63,20 @@ const toTree = (arr) => {
  * @param {TreeNode} root
  * @return {number}
  */
-const maxDepth = function (root) {
-  // TODO: 在这里实现你的解法
+var maxDepth = function(root) {
+  // 空节点
+  if (root === null) {
+      return 0;
+  }
+
+  // 左子树的最大深度
+  const leftDepth = maxDepth(root.left);
+
+  // 右子树的最大深度
+  const rightDepth = maxDepth(root.right);
+
+  // 取左右较大的，再加上当前节点
+  return Math.max(leftDepth, rightDepth) + 1;
 };
 
 // ─── 测试 ───────────────────────────────────────────

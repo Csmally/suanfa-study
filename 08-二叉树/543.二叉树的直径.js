@@ -66,9 +66,30 @@ const toTree = (arr) => {
  * @param {TreeNode} root
  * @return {number}
  */
-const diameterOfBinaryTree = function (root) {
-  // TODO: 在这里实现你的解法
-};
+const diameterOfBinaryTree = function(root) {
+  let diameter = 0;
 
+  function depth(node) {
+      if (node === null) {
+          return 0;
+      }
+
+      // 左子树最大深度
+      const left = depth(node.left);
+
+      // 右子树最大深度
+      const right = depth(node.right);
+
+      // 经过当前节点的路径长度
+      diameter = Math.max(diameter, left + right);
+
+      // 返回当前节点的最大深度
+      return Math.max(left, right) + 1;
+  }
+
+  depth(root);
+
+  return diameter;
+};
 // ─── 测试 ───────────────────────────────────────────
 // console.log(diameterOfBinaryTree(toTree([1, 2, 3, 4, 5]))); // 期望: 3

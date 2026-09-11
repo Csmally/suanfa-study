@@ -70,6 +70,17 @@ const toTree = (arr) => {
  */
 const invertTree = function (root) {
   // TODO: 在这里实现你的解法
+  const func = (node) => {
+    if (!node) return;
+    const leftNode = node.left;
+    const rightNode = node.right;
+    node.left = rightNode;
+    node.right = leftNode;
+    func(leftNode);
+    func(rightNode);
+  }
+  func(root);
+  return root;
 };
 
 // ─── 测试 ───────────────────────────────────────────
