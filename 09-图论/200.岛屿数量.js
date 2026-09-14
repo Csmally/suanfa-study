@@ -42,12 +42,124 @@
  */
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: DFS / BFS 淹岛（本质是求【连通块个数】）
+ *
+ * 关键转念: 这题看着是"网格题"，其实是【图论题】——
+ *   把每个 '1' 格子看作图里的一个节点，上下左右相邻就连一条边，
+ *   那么"岛屿数量"就是这张图里【连通分量的个数】。
+ *
+ * 求连通分量的标准套路:
+ *   遍历所有节点，遇到没访问过的就
+ *     "计数 +1，然后把它所在的整个连通块标记成已访问"
+ *   这样每个连通块恰好被计数一次。
+ *
+ * 这里的"标记已访问"有个很贴切的做法: 【直接把它淹掉】——
+ *   把访问过的 '1' 原地改成 '0'。既当 visited 用，又不用额外开数组。
+ *
+ * 于是主循环就这么短:
+ *   for 每个格子:
+ *     if (grid[i][j] === '1') {      ← 还是 '1'，说明没被淹过
+ *       count++;                      ← 发现一座新岛
+ *       淹掉整座岛;
+ *     }
+ *
+ * 易错点:
+ *   1. 【必须标记已访问】。不标记的话，DFS 会在相邻格子之间来回
+ *      横跳（A→B→A→B…）无限递归；也会让同一座岛被重复计数
+ *   2. 【BFS 要在入队时就标记】，不能等出队再标记。
+ *      等出队的话同一个格子会被它的多个邻居各入队一次，队列爆炸
+ *   3. 四个方向的边界判断别写错（也可以用 dirs 数组统一处理）
+ *
+ * 关于"原地修改": 直接把 grid 里的 '1' 改成 '0' 是 LeetCode 允许的，
+ * 也是空间最优的做法。如果不想动输入，就另开一个 visited 布尔数组，
+ * 代价是多 O(mn) 空间。
+ *
+ * 复杂度: 时间 O(m * n)（每个格子最多被访问一次），
+ *         空间 O(m * n)（递归栈 / 队列的最坏情况）
+ *
+ * ── 另两条路 ──
+ *   BFS: 用队列代替递归，最大的好处是【不会爆递归栈】。
+ *        本题网格可达 300 x 300，万一全是陆地，DFS 递归深度
+ *        可能接近 90000 —— 会炸。
+ *   并查集: 每块陆地先各自成一个集合，相邻的 union，最后数
+ *        还剩几个集合。思路也通，但代码量大得多，一般不作首选。
+ */
+
+/**
  * numIslands
+ * DFS 淹岛
  * @param {character[][]} grid
  * @return {number}
  */
 const numIslands = function (grid) {
-  // TODO: 在这里实现你的解法
+  const m = grid.length;
+  const n = grid[0].length;
+  let count = 0;
+
+  // 从 (i, j) 出发，把这一整座岛全部淹掉
+  const sink = (i, j) => {
+    // 越界，或者这里不是陆地 → 停
+    if (i < 0 || i >= m || j < 0 || j >= n || grid[i][j] !== '1') return;
+
+    grid[i][j] = '0'; // 淹掉，同时充当 visited 标记
+
+    sink(i - 1, j); // 上
+    sink(i + 1, j); // 下
+    sink(i, j - 1); // 左
+    sink(i, j + 1); // 右
+  };
+
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (grid[i][j] === '1') {
+        count++; // 还是 '1'，说明它没被淹过 → 是一座新岛
+        sink(i, j);
+      }
+    }
+  }
+
+  return count;
+};
+
+/**
+ * numIslandsBFS
+ * BFS 淹岛: 用队列代替递归，不会爆栈
+ * @param {character[][]} grid
+ * @return {number}
+ */
+const numIslandsBFS = function (grid) {
+  const m = grid.length;
+  const n = grid[0].length;
+  const dirs = [[-1, 0], [1, 0], [0, -1], [0, 1]]; // 上下左右
+  let count = 0;
+
+  for (let i = 0; i < m; i++) {
+    for (let j = 0; j < n; j++) {
+      if (grid[i][j] !== '1') continue;
+
+      count++;
+      grid[i][j] = '0'; // 【入队前就标记】
+      const queue = [[i, j]];
+      let head = 0;
+
+      while (head < queue.length) {
+        const [x, y] = queue[head++];
+
+        for (const [dx, dy] of dirs) {
+          const nx = x + dx;
+          const ny = y + dy;
+
+          if (nx >= 0 && nx < m && ny >= 0 && ny < n && grid[nx][ny] === '1') {
+            grid[nx][ny] = '0'; // 【入队时就标记】，否则同一格会被重复入队
+            queue.push([nx, ny]);
+          }
+        }
+      }
+    }
+  }
+
+  return count;
 };
 
 // ─── 测试 ───────────────────────────────────────────
@@ -58,3 +170,14 @@ const numIslands = function (grid) {
 //   ['0', '0', '0', '0', '0'],
 // ];
 // console.log(numIslands(grid)); // 期望: 1
+//
+// 注意: 函数会【原地修改 grid】(把 '1' 淹成 '0')。
+// 所以要比较两个实现的话,得各喂一份拷贝:
+// const grid2 = [
+//   ['1','1','0','0','0'],
+//   ['1','1','0','0','0'],
+//   ['0','0','1','0','0'],
+//   ['0','0','0','1','1'],
+// ];
+// console.log(numIslands(grid2.map(r => r.slice())));    // 期望: 3
+// console.log(numIslandsBFS(grid2.map(r => r.slice()))); // 期望: 3

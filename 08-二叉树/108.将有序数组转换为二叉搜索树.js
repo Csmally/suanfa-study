@@ -80,7 +80,7 @@ const toTree = (arr) => {
  * 实现:
  *   build(lo, hi) 表示"用 nums[lo..hi] 这一段建一棵子树"
  *     1. lo > hi → 区间为空，返回 null（递归终点）
- *     2. mid = (lo + hi) >> 1，拿 nums[mid] 造根节点
+ *     2. mid = Math.floor((lo + hi) / 2)，拿 nums[mid] 造根节点
  *     3. 左子树 = build(lo, mid - 1)，右子树 = build(mid + 1, hi)
  *
  * 易错点:
@@ -107,7 +107,7 @@ const sortedArrayToBST = function (nums) {
   const build = (lo, hi) => {
     if (lo > hi) return null; // 区间为空，递归终点
 
-    const mid = (lo + hi) >> 1; // 取中点（偏左）；等价于 Math.floor((lo+hi)/2)
+    const mid = Math.floor((lo + hi) / 2); // 取中点（偏左）
     const node = new TreeNode(nums[mid]);
 
     node.left = build(lo, mid - 1); // 左半边 → 左子树
