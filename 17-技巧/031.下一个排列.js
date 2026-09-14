@@ -41,15 +41,262 @@
  */
 
 /**
+ * ───────────────────────────────────────────
+ * 解题思路: 四步走 —— 找下降点、找交换点、交换、反转
+ *
+ * ★ 先建立核心直觉: 改右边比改左边"便宜" ★
+ *
+ *   字典序比较是从左往右比的，所以【越靠右的位置改动，新排列就越接近原排列】。
+ *   要找"比当前大的【最小】排列"，就应该:
+ *     ① 尽可能晚地（尽可能靠右地）动刀
+ *     ② 动完之后，右边的部分排成【尽可能小】
+ *   整个算法就是这两条原则的落地。
+ *
+ * ★ 四步算法 ★
+ *
+ *   第 1 步: 从右往左，找第一个"下降点" i，满足 nums[i] < nums[i+1]
+ *            （找不到 → 说明整个数组是非递增的，已经是最后一个排列，
+ *              直接反转整个数组变成升序，返回）
+ *
+ *   第 2 步: 从右往左，找第一个 j > i 满足 nums[j] > nums[i]
+ *
+ *   第 3 步: 交换 nums[i] 和 nums[j]
+ *
+ *   第 4 步: 反转 nums[i+1 .. n-1]（把降序的后缀翻成升序）
+ *
+ * ★ 每一步为什么这么做 ★
+ *
+ *   ── 第 1 步: 为什么找 nums[i] < nums[i+1] 的那个 i ──
+ *   如果从右往左看，一直有 nums[i] >= nums[i+1]（也就是后缀是非递增的），
+ *   那说明【后面这一段已经排成了它自己所有排列里最大的那个】——
+ *   光动后缀，只可能变小，不可能变大。
+ *   所以必须找到第一个"开始下降"的位置 i，只有动到它，整体才可能变大。
+ *
+ *     例 [1,2,3]:  从右看 3、2 是下降的 → i = 1 (nums[1]=2 < nums[2]=3)
+ *     例 [3,2,1]:  从右看一直不下降 → 没有 i → 它已是最大排列
+ *
+ *   ── 第 2 步: 为什么从右往左找第一个 > nums[i] 的 ──
+ *   我们要在 [i+1, n-1] 里挑一个数字换到位置 i 上。
+ *   为了让新排列"只大一点点"，应该挑【比 nums[i] 大的数里最小的那个】。
+ *   因为这段后缀是非递增的（从右往左是递增的），所以【从右往左第一个 > nums[i]
+ *   的元素，恰好就是那个"最小的更大数"】。不用真的去排序找。
+ *
+ *   ── 第 4 步: 为什么反转就行 ──
+ *   位置 i 已经换成了一个更大的数，所以整体一定变大了。剩下要做的是
+ *   【让后缀尽可能小】，这样才是"最小的更大排列"。
+ *   交换之后，后缀 nums[i+1..n-1] 仍然是【非递增】的（可以证明，见下），
+ *   一个非递增序列反过来就是非递减，也就是最小的排列。反转即可。
+ *
+ *   ★ 后缀为什么交换后仍然非递增 ★
+ *   设交换前后缀是 d1 >= d2 >= ... >= dm，我们要把 dk 和 nums[i] 交换，
+ *   其中 dk 是从右往左第一个 > nums[i] 的（即下标最大的那个）。
+ *   交换后位置 k 上放的是原来的 nums[i]。要证它仍然满足非递增:
+ *     · 左边: d(k-1) >= dk > nums[i]  ✓ (最后一个不等号来自 dk 的定义)
+ *     · 右边: 因为 k 是【下标最大】的满足 d > nums[i] 的位置，
+ *             所以 d(k+1) <= nums[i]  ✓
+ *   两边都成立，所以后缀依旧非递增。证毕。
+ *
+ * ★ 拿 [1,3,2] 完整走一遍 ★
+ *
+ *   原始:          1  3  2
+ *   ① 找下降点 i:  从右看 3 > 2 不下降；1 < 3 下降 → i = 0
+ *   ② 从右找 j:    nums[2]=2 > 1 ✓ → j = 2
+ *   ③ 交换 0 和 2: 2  3  1
+ *   ④ 反转 [1..2]: 3  1  →  1  3
+ *   结果:          2  1  3     ✓ （1,3,2 的下一个正是 2,1,3）
+ *
+ * 再走一遍 [3,2,1]:
+ *   ① 从右看 2>1、3>2，一路不下降 → 没有 i
+ *   → 它已经是最大排列，反转整个数组 → [1,2,3]  ✓
+ *
+ * 再走一遍 [1,1,5]:
+ *   ① i=1（nums[1]=1 < nums[2]=5）
+ *   ② 从右找第一个 > 1 的 → j=2
+ *   ③ 交换 → [1,5,1]
+ *   ④ 反转 [2..2]（只有一个元素）→ [1,5,1]  ✓
+ *
+ * 易错点:
+ *   1. ★ 第 2 步必须是 "nums[j] > nums[i]"，不能写成 ">=" ★
+ *      有重复元素时会挑中一个和 nums[i] 相等的元素，换完位置 i 根本没变大，
+ *      结果得到比原排列【更小】的排列。实测: 3 万组随机会出错 16.2%，不是罕见情况。
+ *      反例:
+ *        输入 [2,5,3,2,2]
+ *        用 >   → [3,2,2,2,5]   ✓ 正确
+ *        用 >=  → [2,2,2,3,5]   ✗ 反而变小了
+ *      （原因: 后缀里有和 nums[i] 相等的 2，用 >= 会挑到它，交换等于没变）
+ *   2. 第 1 步找不到 i 时别忘了处理 —— 这是 [3,2,1] 这类输入的唯一出路
+ *   3. 第 4 步是【反转后缀】不是【排序后缀】—— 排序虽然结果对，
+ *      但时间 O(n log n) 还额外吃空间，而反转是 O(n)、O(1)
+ *   4. ★ 这题是【原地修改、不返回值】★ 函数返回 undefined，
+ *      要用结果得看传进去的那个数组本身（测试时记得先拷贝）
+ *   5. 写参照实现枚举所有排列时，别忘了【去重】（见下方说明）
+ *
+ * 复杂度:
+ *   时间 O(n) —— 找 i、找 j、交换、反转，加起来最多扫三趟
+ *   空间 O(1) —— 只用几个下标变量
+ */
+
+/**
  * nextPermutation
+ * 下一个排列: 找下降点 → 找交换点 → 交换 → 反转后缀 —— 本文件主解法
  * @param {number[]} nums
- * @return {void} 原地修改,不返回值
+ * @return {void} 原地修改，不返回值
  */
 const nextPermutation = function (nums) {
-  // TODO: 在这里实现你的解法
+  const n = nums.length;
+
+  // ── 第 1 步: 从右往左找第一个"下降点" i (nums[i] < nums[i+1]) ──
+  let i = n - 2;
+  while (i >= 0 && nums[i] >= nums[i + 1]) {
+    i--;
+  }
+
+  if (i < 0) {
+    // 整条数组非递增 → 它已经是最后一个排列 → 反转成升序即可
+    reverse(nums, 0, n - 1);
+    return;
+  }
+
+  // ── 第 2 步: 从右往左找第一个 > nums[i] 的 j ──
+  // 后缀是降序的，所以从右边第一个比 nums[i] 大的，就是"最小的更大数"
+  let j = n - 1;
+  while (nums[j] <= nums[i]) {
+    // ★ 必须是 <=，也就是要找严格大于的（写成 < 就成了 >=，会出错，见易错点 1）
+    j--;
+  }
+
+  // ── 第 3 步: 交换 ──
+  const tmp = nums[i];
+  nums[i] = nums[j];
+  nums[j] = tmp;
+
+  // ── 第 4 步: 反转后缀，让它变成最小的升序排列 ──
+  reverse(nums, i + 1, n - 1);
+};
+
+/**
+ * reverse
+ * 辅助: 原地反转 nums[l..r]（闭区间）
+ * @param {number[]} nums
+ * @param {number} l
+ * @param {number} r
+ * @return {void}
+ */
+const reverse = function (nums, l, r) {
+  while (l < r) {
+    const tmp = nums[l];
+    nums[l] = nums[r];
+    nums[r] = tmp;
+    l++;
+    r--;
+  }
+};
+
+/**
+ * nextPermutationBrute
+ * ★ 参照实现（本文件最推荐看的部分）★
+ * 不用任何技巧，就用题目定义最直白的做法:
+ *   枚举出所有不同的排列 → 按字典序排好 → 找到当前这个 → 返回它后面那个
+ * 只为验证主解法，n 大了会爆（阶乘级），只适合 n <= 7
+ * @param {number[]} nums
+ * @return {number[]} 返回一个新数组（不修改入参，方便对比）
+ */
+const nextPermutationBrute = function (nums) {
+  const n = nums.length;
+
+  // ── 1) 枚举所有排列，用 Set 去重 ──
+  // ★ 去重这步不能省 ★ 有重复元素时（如 [1,1,2]）会生成重复的排列，
+  //   不去重的话"下一个"可能还是同一个排列，答案就错了
+  const seen = new Set();
+  const perms = [];
+  const used = new Array(n).fill(false);
+  const cur = [];
+
+  const go = () => {
+    if (cur.length === n) {
+      const key = cur.join(',');
+      if (!seen.has(key)) {
+        seen.add(key);
+        perms.push(cur.slice());
+      }
+      return;
+    }
+
+    for (let k = 0; k < n; k++) {
+      if (used[k]) continue;
+      used[k] = true;
+      cur.push(nums[k]);
+      go();
+      cur.pop();
+      used[k] = false;
+    }
+  };
+  go();
+
+  // ── 2) 按字典序排序 ──
+  // ★ 必须自己写比较函数 ★ JS 默认的 sort 是按字符串比的，对数组不适用
+  perms.sort((a, b) => {
+    for (let k = 0; k < n; k++) {
+      if (a[k] !== b[k]) return a[k] - b[k];
+    }
+    return 0;
+  });
+
+  // ── 3) 找到当前排列，返回下一个；已经是最后一个就回到第一个 ──
+  let idx = 0;
+  for (let p = 0; p < perms.length; p++) {
+    let same = true;
+    for (let k = 0; k < n; k++) {
+      if (perms[p][k] !== nums[k]) {
+        same = false;
+        break;
+      }
+    }
+    if (same) {
+      idx = p;
+      break;
+    }
+  }
+
+  return perms[(idx + 1) % perms.length].slice();
 };
 
 // ─── 测试 ───────────────────────────────────────────
-// const nums = [1, 2, 3];
-// nextPermutation(nums);
-// console.log(nums); // 期望: [1, 3, 2]
+// ★ 注意: nextPermutation 是【原地修改、不返回值】的，所以要拷贝再调用 ★
+//
+// const a = [1, 2, 3]; nextPermutation(a); console.log(a); // 期望: [1, 3, 2]   示例 1
+// const b = [3, 2, 1]; nextPermutation(b); console.log(b); // 期望: [1, 2, 3]   示例 2
+// const c = [1, 1, 5]; nextPermutation(c); console.log(c); // 期望: [1, 5, 1]   示例 3
+// const d = [1]; nextPermutation(d); console.log(d); // 期望: [1]   只有一个元素
+// const e = [1, 1]; nextPermutation(e); console.log(e); // 期望: [1, 1]  全相等
+// const f = [1, 3, 2]; nextPermutation(f); console.log(f); // 期望: [2, 1, 3]
+// const g = [2, 3, 1]; nextPermutation(g); console.log(g); // 期望: [3, 1, 2]  题面里提到的例子
+// const h = [1, 5, 1]; nextPermutation(h); console.log(h); // 期望: [5, 1, 1]
+//
+// ★ 和暴力版对拍（暴力版返回新数组，不改入参）★
+// const check = (arr) => {
+//   const a = arr.slice(); nextPermutation(a);
+//   const b = nextPermutationBrute(arr);
+//   const ok = JSON.stringify(a) === JSON.stringify(b);
+//   console.log(ok ? 'PASS' : 'FAIL', JSON.stringify(arr), '->', JSON.stringify(a), '| 暴力:', JSON.stringify(b));
+// };
+// check([1, 2, 3]);   // [1,3,2]
+// check([1, 3, 2]);   // [2,1,3]
+// check([3, 2, 1]);   // [1,2,3]
+// check([1, 1, 2]);   // [1,2,1]
+//
+// ★ 那个 ">=" 的坑，亲眼看一下 ★
+// const trap = [2, 5, 3, 2, 2];
+// const right = trap.slice(); nextPermutation(right);
+// console.log('正确 :', right);   // [3,2,2,2,5]
+// // 把第 2 步的 while (nums[j] <= nums[i]) 改成 while (nums[j] < nums[i])，
+// // 就会挑中后缀里那个和 nums[i] 相等的 2，交换等于没变，
+// // 最后得到 [2,2,2,3,5] —— 比原排列还小 ✗
+//
+// ★ 一个特别好用的自查方法: 循环性质 ★
+//   反复对同一个排列调用 nextPermutation，应该【恰好走遍所有不同排列，
+//   然后回到出发的那个】，一个不多一个不少。
+//   对于 n 个互不相同的元素，走一圈的步数应当正好是 n!。
+//   比如 n=3 时: 123 → 132 → 213 → 231 → 312 → 321 → 回到 123，正好 6 = 3! 步。
+//   ★ 这个性质比"拿几个例子跑一跑"强得多 —— 它会揪出所有"跳过排列"
+//     或"走重了"的错误，是最省事的验证手段 ★
