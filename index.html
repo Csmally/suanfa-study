@@ -24,11 +24,49 @@
         font-size: 35px;
     }
 </style>
-<script src="./10-回溯/046.全排列.js"></script>
+<script src="./15-动态规划/032.最长有效括号.js"></script>
 <script>
     function dianji() {
-        const res = permute([1,2,3]);
-        console.log(res)
+        const cases = [
+            ['(()', 2],            // 示例 1
+            [')()())', 4],         // 示例 2
+            ['', 0],               // 示例 3
+            ['(', 0],
+            [')', 0],
+            [')(', 0],
+            ['()(())', 6],         // ★ 情况 B 的典型例子
+            ['()(()', 2],          // ★ 双向扫描必须扫两遍的原因
+            ['(()())', 6],
+            ['((()))()', 8],       // 嵌套 + 拼接
+            ['(((((', 0],          // 全是左括号
+            [')()())(', 4]         // 两头都多出括号
+        ]
+        for (const [input, exp] of cases) {
+            // 暴力版是 O(n²)，只在短串上参与对比
+            const all = [
+                longestValidParentheses(input),
+                longestValidParenthesesStack(input),
+                longestValidParenthesesScan(input)
+            ]
+            if (input.length <= 30) all.push(longestValidParenthesesBrute(input))
+            const ok = all.every(v => v === exp)
+            console.log(
+                ok ? 'PASS' : 'FAIL',
+                JSON.stringify(input).padEnd(12),
+                'DP:', String(all[0]).padEnd(4),
+                '栈:', String(all[1]).padEnd(4),
+                '双向:', String(all[2]).padEnd(4),
+                all[3] === undefined ? '' : '暴力: ' + all[3],
+                ' 期望', exp
+            )
+        }
+
+        // 压力测试: 题目上限 n = 30000
+        const big = '()'.repeat(15000)
+        console.time('n=30000')
+        const res = longestValidParentheses(big)
+        console.timeEnd('n=30000')
+        console.log('30000 个 "()" ->', res, '期望 30000')
     }
 </script>
 <body>
